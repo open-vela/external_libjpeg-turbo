@@ -30,6 +30,9 @@ if(CPU_TYPE STREQUAL "x86_64")
   if(CYGWIN)
     set(CMAKE_ASM_NASM_OBJECT_FORMAT win64)
   endif()
+  if(CMAKE_C_COMPILER_ABI MATCHES "ELF X32")
+    set(CMAKE_ASM_NASM_OBJECT_FORMAT elfx32)
+  endif()
 elseif(CPU_TYPE STREQUAL "i386")
   if(BORLAND)
     set(CMAKE_ASM_NASM_OBJECT_FORMAT obj)
@@ -305,9 +308,10 @@ endif()
 
 elseif(CPU_TYPE STREQUAL "loongson")
 
-set(SIMD_SOURCES loongson/jccolor-mmi.c loongson/jcsample-mmi.c
-  loongson/jdcolor-mmi.c loongson/jdsample-mmi.c loongson/jfdctint-mmi.c
-  loongson/jidctint-mmi.c loongson/jquanti-mmi.c)
+set(SIMD_SOURCES loongson/jccolor-mmi.c loongson/jcgray-mmi.c
+  loongson/jcsample-mmi.c loongson/jdcolor-mmi.c loongson/jdsample-mmi.c
+  loongson/jdmerge-mmi.c loongson/jfdctfst-mmi.c loongson/jfdctint-mmi.c
+  loongson/jidctfst-mmi.c loongson/jidctint-mmi.c loongson/jquanti-mmi.c)
 
 if(CMAKE_COMPILER_IS_GNUCC)
   foreach(file ${SIMD_SOURCES})
