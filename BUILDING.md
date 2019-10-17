@@ -47,8 +47,10 @@ Build Requirements
 
 - If building the TurboJPEG Java wrapper, JDK or OpenJDK 1.5 or later is
   required.  Most modern Linux distributions, as well as Solaris 10 and later,
-  include JDK or OpenJDK.  For other systems, you can obtain the Oracle Java
-  Development Kit from
+  include JDK or OpenJDK.  On OS X 10.5 and 10.6, it will be necessary to
+  install the Java Developer Package, which can be downloaded from
+  <http://developer.apple.com/downloads> (Apple ID required.)  For other
+  systems, you can obtain the Oracle Java Development Kit from
   <http://www.oracle.com/technetwork/java/javase/downloads>.
 
   * If using JDK 11 or later, CMake 3.10.x or later must also be used.
@@ -408,6 +410,93 @@ for these platforms.
   it should be installed in your `PATH`.
 
 
+### ARMv7 (32-bit)
+
+**gas-preprocessor.pl required**
+
+The following scripts demonstrate how to build libjpeg-turbo to run on the
+iPhone 3GS-4S/iPad 1st-3rd Generation and newer:
+
+#### Xcode 4.2 and earlier (LLVM-GCC)
+
+    IOS_PLATFORMDIR=/Developer/Platforms/iPhoneOS.platform
+    IOS_SYSROOT=($IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS*.sdk)
+    export CFLAGS="-mfloat-abi=softfp -march=armv7 -mcpu=cortex-a8 -mtune=cortex-a8 -mfpu=neon -miphoneos-version-min=3.0"
+
+    cd {build_directory}
+
+    cat <<EOF >toolchain.cmake
+    set(CMAKE_SYSTEM_NAME Darwin)
+    set(CMAKE_SYSTEM_PROCESSOR arm)
+    set(CMAKE_C_COMPILER ${IOS_PLATFORMDIR}/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2)
+    EOF
+
+    cmake -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
+      -DCMAKE_OSX_SYSROOT=${IOS_SYSROOT[0]} \
+      [additional CMake flags] {source_directory}
+    make
+
+#### Xcode 4.3-4.6 (LLVM-GCC)
+
+Same as above, but replace the first line with:
+
+    IOS_PLATFORMDIR=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform
+
+#### Xcode 5 and later (Clang)
+
+    IOS_PLATFORMDIR=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform
+    IOS_SYSROOT=($IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS*.sdk)
+    export CFLAGS="-mfloat-abi=softfp -arch armv7 -miphoneos-version-min=3.0"
+    export ASMFLAGS="-no-integrated-as"
+
+    cd {build_directory}
+
+    cat <<EOF >toolchain.cmake
+    set(CMAKE_SYSTEM_NAME Darwin)
+    set(CMAKE_SYSTEM_PROCESSOR arm)
+    set(CMAKE_C_COMPILER /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang)
+    EOF
+
+    cmake -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
+      -DCMAKE_OSX_SYSROOT=${IOS_SYSROOT[0]} \
+      [additional CMake flags] {source_directory}
+    make
+
+
+### ARMv7s (32-bit)
+
+**gas-preprocessor.pl required**
+
+The following scripts demonstrate how to build libjpeg-turbo to run on the
+iPhone 5/iPad 4th Generation and newer:
+
+#### Xcode 4.5-4.6 (LLVM-GCC)
+
+    IOS_PLATFORMDIR=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform
+    IOS_SYSROOT=($IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS*.sdk)
+    export CFLAGS="-Wall -mfloat-abi=softfp -march=armv7s -mcpu=swift -mtune=swift -mfpu=neon -miphoneos-version-min=6.0"
+
+    cd {build_directory}
+
+    cat <<EOF >toolchain.cmake
+    set(CMAKE_SYSTEM_NAME Darwin)
+    set(CMAKE_SYSTEM_PROCESSOR arm)
+    set(CMAKE_C_COMPILER ${IOS_PLATFORMDIR}/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2)
+    EOF
+
+    cmake -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
+      -DCMAKE_OSX_SYSROOT=${IOS_SYSROOT[0]} \
+      [additional CMake flags] {source_directory}
+    make
+
+#### Xcode 5 and later (Clang)
+
+Same as the ARMv7 build procedure for Xcode 5 and later, except replace the
+compiler flags as follows:
+
+    export CFLAGS="-Wall -mfloat-abi=softfp -arch armv7s -miphoneos-version-min=6.0"
+
+
 ### ARMv8 (64-bit)
 
 **gas-preprocessor.pl required if using Xcode < 6**
@@ -431,6 +520,9 @@ iPhone 5S/iPad Mini 2/iPad Air and newer.
       -DCMAKE_OSX_SYSROOT=${IOS_SYSROOT[0]} \
       [additional CMake flags] {source_directory}
     make
+
+Once built, lipo can be used to combine the ARMv7, v7s, and/or v8 variants into
+a universal library.
 
 
 Building libjpeg-turbo for Android
@@ -655,17 +747,22 @@ string excludes that architecture from the package.
 
 * `OSX_32BIT_BUILD`: Directory containing an i386 (32-bit) Mac build of
   libjpeg-turbo (default: *{source_directory}*/osxx86)
+* `IOS_ARMV7_BUILD`: Directory containing an ARMv7 (32-bit) iOS build of
+  libjpeg-turbo (default: *{source_directory}*/iosarmv7)
+* `IOS_ARMV7S_BUILD`: Directory containing an ARMv7s (32-bit) iOS build of
+  libjpeg-turbo (default: *{source_directory}*/iosarmv7s)
 * `IOS_ARMV8_BUILD`: Directory containing an ARMv8 (64-bit) iOS build of
   libjpeg-turbo (default: *{source_directory}*/iosarmv8)
 
-You should first use CMake to configure i386 and/or ARMv8 sub-builds of
-libjpeg-turbo (see "Build Recipes" and "Building libjpeg-turbo for iOS" above)
-in build directories that match those specified in the aforementioned CMake
-variables.  Next, configure the primary build of libjpeg-turbo as an
-out-of-tree build, and build it.  Once the primary build has been built, run
-`make udmg` from the build directory.  The packaging system will build the
-sub-builds, use lipo to combine them into a single set of universal binaries,
-then package the universal binaries in the same manner as `make dmg`.
+You should first use CMake to configure i386, ARMv7, ARMv7s, and/or ARMv8
+sub-builds of libjpeg-turbo (see "Build Recipes" and "Building libjpeg-turbo
+for iOS" above) in build directories that match those specified in the
+aforementioned CMake variables.  Next, configure the primary build of
+libjpeg-turbo as an out-of-tree build, and build it.  Once the primary build
+has been built, run `make udmg` from the build directory.  The packaging system
+will build the sub-builds, use lipo to combine them into a single set of
+universal binaries, then package the universal binaries in the same manner as
+`make dmg`.
 
 
 Cygwin
