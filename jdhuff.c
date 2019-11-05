@@ -5,7 +5,6 @@
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
  * Copyright (C) 2009-2011, 2016, 2018-2019, D. R. Commander.
- * Copyright (C) 2018, Matthias Räncker.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -39,6 +38,24 @@
 typedef struct {
   int last_dc_val[MAX_COMPS_IN_SCAN]; /* last DC coef for each component */
 } savable_state;
+
+/* This macro is to work around compilers with missing or broken
+ * structure assignment.  You'll need to fix this code if you have
+ * such a compiler and you change MAX_COMPS_IN_SCAN.
+ */
+
+#ifndef NO_STRUCT_ASSIGN
+#define ASSIGN_STATE(dest, src)  ((dest) = (src))
+#else
+#if MAX_COMPS_IN_SCAN == 4
+#define ASSIGN_STATE(dest, src) \
+  ((dest).last_dc_val[0] = (src).last_dc_val[0], \
+   (dest).last_dc_val[1] = (src).last_dc_val[1], \
+   (dest).last_dc_val[2] = (src).last_dc_val[2], \
+   (dest).last_dc_val[3] = (src).last_dc_val[3])
+#endif
+#endif
+
 
 typedef struct {
   struct jpeg_entropy_decoder pub; /* public fields */
@@ -406,7 +423,7 @@ no_more_bytes:
   } \
 }
 
-#if SIZEOF_SIZE_T == 8 || defined(_WIN64) || (defined(__x86_64__) && defined(__ILP32__))
+#if SIZEOF_SIZE_T == 8 || defined(_WIN64)
 
 /* Pre-fetch 48 bytes, because the holding register is 64-bit */
 #define FILL_BIT_BUFFER_FAST \
@@ -551,7 +568,7 @@ decode_mcu_slow(j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
   /* Load up working state */
   BITREAD_LOAD_STATE(cinfo, entropy->bitstate);
-  state = entropy->saved;
+  ASSIGN_STATE(state, entropy->saved);
 
   for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
     JBLOCKROW block = MCU_data ? MCU_data[blkn] : NULL;
@@ -636,7 +653,7 @@ decode_mcu_slow(j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
   /* Completed MCU, so update state */
   BITREAD_SAVE_STATE(cinfo, entropy->bitstate);
-  entropy->saved = state;
+  ASSIGN_STATE(entropy->saved, state);
   return TRUE;
 }
 
@@ -654,7 +671,7 @@ decode_mcu_fast(j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   /* Load up working state */
   BITREAD_LOAD_STATE(cinfo, entropy->bitstate);
   buffer = (JOCTET *)br_state.next_input_byte;
-  state = entropy->saved;
+  ASSIGN_STATE(state, entropy->saved);
 
   for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
     JBLOCKROW block = MCU_data ? MCU_data[blkn] : NULL;
@@ -723,7 +740,7 @@ decode_mcu_fast(j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   br_state.bytes_in_buffer -= (buffer - br_state.next_input_byte);
   br_state.next_input_byte = buffer;
   BITREAD_SAVE_STATE(cinfo, entropy->bitstate);
-  entropy->saved = state;
+  ASSIGN_STATE(entropy->saved, state);
   return TRUE;
 }
 
