@@ -33,11 +33,9 @@ matrix:
         CMAKE_FLAGS="-DWITH_12BIT=1"
         CTEST_OUTPUT_ON_FAILURE=1
     - os: linux
-      dist: bionic
       compiler: gcc
       env:
-        BUILD_X32=1
-        CMAKE_FLAGS="-DWITH_JPEG7=1 -DCMAKE_C_FLAGS=-mx32"
+        CMAKE_FLAGS="-DWITH_JPEG7=1"
         CTEST_OUTPUT_ON_FAILURE=1
       addons:
         apt:
@@ -73,12 +71,9 @@ before_cache:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 
 before_install:
-  - if [ "$BUILD_X32" = "1" ]; then
-      sudo apt -y --install-recommends install libc6-dev-x32;
-    fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
       git clone --depth=1 https://github.com/libjpeg-turbo/gas-preprocessor.git ~/src/gas-preprocessor &&
-      ln -fs /Applications/Xcode.app /Applications/Xcode83.app;
+      ln -fs /Applications/Xcode.app /Applications/Xcode72.app;
     fi
   - if [ "${BUILD_OFFICIAL:-}" != "" ]; then
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
@@ -101,7 +96,7 @@ script:
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         mkdir $HOME/rpmkeys &&
         wget --no-check-certificate "http://www.libjpeg-turbo.org/key/LJTPR-GPG-KEY" -O $HOME/rpmkeys/LJTPR-GPG-KEY &&
-        docker run -v $HOME/src/ljt.nightly:/root/src/ljt.nightly -v $HOME/src/buildscripts:/root/src/buildscripts -v $TRAVIS_BUILD_DIR:/root/src/libjpeg-turbo -v $HOME/.gnupg:/root/.gnupg -v $HOME/rpmkeys:/rpmkeys -t dcommander/buildljt:$TRAVIS_BRANCH bash -c "rpm --import /rpmkeys/LJTPR-GPG-KEY && ~/src/buildscripts/buildljt -d /root/src/libjpeg-turbo -v" &&
+        docker run -v $HOME/src/ljt.nightly:/root/src/ljt.nightly -v $HOME/src/buildscripts:/root/src/buildscripts -v $TRAVIS_BUILD_DIR:/root/src/libjpeg-turbo -v $HOME/.gnupg:/root/.gnupg -v $HOME/rpmkeys:/rpmkeys -t dcommander/buildljt:latest bash -c "rpm --import /rpmkeys/LJTPR-GPG-KEY && ~/src/buildscripts/buildljt -d /root/src/libjpeg-turbo -v" &&
         sudo chown -R travis:travis ~/src/ljt.nightly &&
         mv ~/src/ljt.nightly/latest/log-$TRAVIS_OS_NAME.txt ~/src/ljt.nightly/latest/files/;
       else
