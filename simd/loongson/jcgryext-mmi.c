@@ -5,10 +5,7 @@
  * Copyright (C) 2014-2015, 2019, D. R. Commander.  All Rights Reserved.
  * Copyright (C) 2016-2018, Loongson Technology Corporation Limited, BeiJing.
  *                          All Rights Reserved.
- * Authors:  ZhuChen     <zhuchen@loongson.cn>
- *           SunZhangzhi <sunzhangzhi-cq@loongson.cn>
- *           CaiWanwei   <caiwanwei@loongson.cn>
- *           ZhangLixia  <zhanglixia-hf@loongson.cn>
+ * Authors:  ZhangLixia <zhanglixia-hf@loongson.cn>
  *
  * Based on the x86 SIMD extension for IJG JPEG library
  * Copyright (C) 1999-2006, MIYASAKA Masaru.
@@ -30,7 +27,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-/* This file is included by jccolor-mmi.c */
+/* This file is included by jcgray-mmi.c */
 
 
 #if RGB_RED == 0
@@ -90,33 +87,27 @@
 #endif
 
 
-void jsimd_rgb_ycc_convert_mmi(JDIMENSION image_width, JSAMPARRAY input_buf,
-                               JSAMPIMAGE output_buf, JDIMENSION output_row,
-                               int num_rows)
+void jsimd_rgb_gray_convert_mmi(JDIMENSION image_width, JSAMPARRAY input_buf,
+                                JSAMPIMAGE output_buf, JDIMENSION output_row,
+                                int num_rows)
 {
-  JSAMPROW inptr, outptr0, outptr1, outptr2;
+  JSAMPROW inptr, outptr;
   int num_cols, col;
   __m64 re, ro, ge, go, be, bo, xe;
 #if RGB_PIXELSIZE == 4
   __m64 xo;
 #endif
   __m64 rgle, rghe, rglo, rgho, bgle, bghe, bglo, bgho;
-  __m64 ble, halfble, bhe, halfbhe, blo, halfblo, bho, halfbho;
-  __m64 rle, halfrle, rhe, halfrhe, rlo, halfrlo, rho, halfrho;
   __m64 yle_rg, yhe_rg, yle_bg, yhe_bg, yle, yhe, ye;
   __m64 ylo_rg, yho_rg, ylo_bg, yho_bg, ylo, yho, yo, y;
-  __m64 cble, cbhe, cbe, cblo, cbho, cbo, cb;
-  __m64 crle, crhe, cre, crlo, crho, cro, cr;
 
   while (--num_rows >= 0) {
     inptr = *input_buf++;
-    outptr0 = output_buf[0][output_row];
-    outptr1 = output_buf[1][output_row];
-    outptr2 = output_buf[2][output_row];
+    outptr = output_buf[0][output_row];
     output_row++;
 
     for (num_cols = image_width; num_cols > 0; num_cols -= 8,
-         outptr0 += 8, outptr1 += 8, outptr2 += 8) {
+         outptr += 8) {
 
 #if RGB_PIXELSIZE == 3
 
@@ -324,64 +315,25 @@ void jsimd_rgb_ycc_convert_mmi(JDIMENSION image_width, JSAMPARRAY input_buf,
        *
        * (Original)
        * Y  =  0.29900 * R + 0.58700 * G + 0.11400 * B
-       * Cb = -0.16874 * R - 0.33126 * G + 0.50000 * B + CENTERJSAMPLE
-       * Cr =  0.50000 * R - 0.41869 * G - 0.08131 * B + CENTERJSAMPLE
        *
        * (This implementation)
        * Y  =  0.29900 * R + 0.33700 * G + 0.11400 * B + 0.25000 * G
-       * Cb = -0.16874 * R - 0.33126 * G + 0.50000 * B + CENTERJSAMPLE
-       * Cr =  0.50000 * R - 0.41869 * G - 0.08131 * B + CENTERJSAMPLE
        */
 
       rglo = _mm_unpacklo_pi16(ro, go);
       rgho = _mm_unpackhi_pi16(ro, go);
       ylo_rg = _mm_madd_pi16(rglo, PW_F0299_F0337);
       yho_rg = _mm_madd_pi16(rgho, PW_F0299_F0337);
-      cblo = _mm_madd_pi16(rglo, PW_MF016_MF033);
-      cbho = _mm_madd_pi16(rgho, PW_MF016_MF033);
-
-      blo = _mm_loadlo_pi16_f(bo);
-      bho = _mm_loadhi_pi16_f(bo);
-      halfblo = _mm_srli_pi32(blo, 1);
-      halfbho = _mm_srli_pi32(bho, 1);
-
-      cblo = _mm_add_pi32(cblo, halfblo);
-      cbho = _mm_add_pi32(cbho, halfbho);
-      cblo = _mm_add_pi32(cblo, PD_ONEHALFM1_CJ);
-      cbho = _mm_add_pi32(cbho, PD_ONEHALFM1_CJ);
-      cblo = _mm_srli_pi32(cblo, SCALEBITS);
-      cbho = _mm_srli_pi32(cbho, SCALEBITS);
-      cbo = _mm_packs_pi32(cblo, cbho);
 
       rgle = _mm_unpacklo_pi16(re, ge);
       rghe = _mm_unpackhi_pi16(re, ge);
       yle_rg = _mm_madd_pi16(rgle, PW_F0299_F0337);
       yhe_rg = _mm_madd_pi16(rghe, PW_F0299_F0337);
-      cble = _mm_madd_pi16(rgle, PW_MF016_MF033);
-      cbhe = _mm_madd_pi16(rghe, PW_MF016_MF033);
-
-      ble = _mm_loadlo_pi16_f(be);
-      bhe = _mm_loadhi_pi16_f(be);
-      halfble = _mm_srli_pi32(ble, 1);
-      halfbhe = _mm_srli_pi32(bhe, 1);
-
-      cble = _mm_add_pi32(cble, halfble);
-      cbhe = _mm_add_pi32(cbhe, halfbhe);
-      cble = _mm_add_pi32(cble, PD_ONEHALFM1_CJ);
-      cbhe = _mm_add_pi32(cbhe, PD_ONEHALFM1_CJ);
-      cble = _mm_srli_pi32(cble, SCALEBITS);
-      cbhe = _mm_srli_pi32(cbhe, SCALEBITS);
-      cbe = _mm_packs_pi32(cble, cbhe);
-
-      cbo = _mm_slli_pi16(cbo, BYTE_BIT);
-      cb = _mm_or_si64(cbe, cbo);
 
       bglo = _mm_unpacklo_pi16(bo, go);
       bgho = _mm_unpackhi_pi16(bo, go);
       ylo_bg = _mm_madd_pi16(bglo, PW_F0114_F0250);
       yho_bg = _mm_madd_pi16(bgho, PW_F0114_F0250);
-      crlo = _mm_madd_pi16(bglo, PW_MF008_MF041);
-      crho = _mm_madd_pi16(bgho, PW_MF008_MF041);
 
       ylo = _mm_add_pi32(ylo_bg, ylo_rg);
       yho = _mm_add_pi32(yho_bg, yho_rg);
@@ -391,25 +343,10 @@ void jsimd_rgb_ycc_convert_mmi(JDIMENSION image_width, JSAMPARRAY input_buf,
       yho = _mm_srli_pi32(yho, SCALEBITS);
       yo = _mm_packs_pi32(ylo, yho);
 
-      rlo = _mm_loadlo_pi16_f(ro);
-      rho = _mm_loadhi_pi16_f(ro);
-      halfrlo = _mm_srli_pi32(rlo, 1);
-      halfrho = _mm_srli_pi32(rho, 1);
-
-      crlo = _mm_add_pi32(crlo, halfrlo);
-      crho = _mm_add_pi32(crho, halfrho);
-      crlo = _mm_add_pi32(crlo, PD_ONEHALFM1_CJ);
-      crho = _mm_add_pi32(crho, PD_ONEHALFM1_CJ);
-      crlo = _mm_srli_pi32(crlo, SCALEBITS);
-      crho = _mm_srli_pi32(crho, SCALEBITS);
-      cro = _mm_packs_pi32(crlo, crho);
-
       bgle = _mm_unpacklo_pi16(be, ge);
       bghe = _mm_unpackhi_pi16(be, ge);
       yle_bg = _mm_madd_pi16(bgle, PW_F0114_F0250);
       yhe_bg = _mm_madd_pi16(bghe, PW_F0114_F0250);
-      crle = _mm_madd_pi16(bgle, PW_MF008_MF041);
-      crhe = _mm_madd_pi16(bghe, PW_MF008_MF041);
 
       yle = _mm_add_pi32(yle_bg, yle_rg);
       yhe = _mm_add_pi32(yhe_bg, yhe_rg);
@@ -422,25 +359,7 @@ void jsimd_rgb_ycc_convert_mmi(JDIMENSION image_width, JSAMPARRAY input_buf,
       yo = _mm_slli_pi16(yo, BYTE_BIT);
       y = _mm_or_si64(ye, yo);
 
-      rle = _mm_loadlo_pi16_f(re);
-      rhe = _mm_loadhi_pi16_f(re);
-      halfrle = _mm_srli_pi32(rle, 1);
-      halfrhe = _mm_srli_pi32(rhe, 1);
-
-      crle = _mm_add_pi32(crle, halfrle);
-      crhe = _mm_add_pi32(crhe, halfrhe);
-      crle = _mm_add_pi32(crle, PD_ONEHALFM1_CJ);
-      crhe = _mm_add_pi32(crhe, PD_ONEHALFM1_CJ);
-      crle = _mm_srli_pi32(crle, SCALEBITS);
-      crhe = _mm_srli_pi32(crhe, SCALEBITS);
-      cre = _mm_packs_pi32(crle, crhe);
-
-      cro = _mm_slli_pi16(cro, BYTE_BIT);
-      cr = _mm_or_si64(cre, cro);
-
-      _mm_store_si64((__m64 *)&outptr0[0], y);
-      _mm_store_si64((__m64 *)&outptr1[0], cb);
-      _mm_store_si64((__m64 *)&outptr2[0], cr);
+      _mm_store_si64((__m64 *)&outptr[0], y);
     }
   }
 }
