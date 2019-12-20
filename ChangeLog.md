@@ -111,6 +111,10 @@ limit the number of allowable scans in the input file.
      - Both programs now accept a `-strict` argument, which can be used to
 treat all warnings as fatal.
 
+6. The ARM 64-bit (ARMv8) NEON SIMD assembly code now stores constants in a
+separate read-only data section rather than in the text section, to support
+execute-only memory layouts.
+
 
 2.0.3
 =====
