@@ -276,6 +276,20 @@ Ljsimd_huff_encode_one_block_neon_consts:
     .byte    4,   5,   6,   7, 255, 255, 255, 255, \
            255, 255, 255, 255, 255, 255, 255, 255  /* L7 : 1 line OK */
 
+/* Constants for jsimd_encode_mcu_AC_first_prepare_neon() */
+
+.balign 16
+Ljsimd_encode_mcu_AC_first_prepare_neon_consts:
+    .byte 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, \
+          0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
+
+/* Constants for jsimd_encode_mcu_AC_refine_prepare_neon() */
+
+.balign 16
+Ljsimd_encode_mcu_AC_refine_prepare_neon_consts:
+    .byte 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, \
+          0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
+
 .text
 
 
@@ -3730,13 +3744,8 @@ generate_jsimd_huff_encode_one_block 0
     LENEND          .req w9
     BITS            .req x5
 
-.balign 16
-Ljsimd_encode_mcu_AC_first_prepare_neon_consts:
-    .byte 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, \
-          0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
-
 asm_function jsimd_encode_mcu_AC_first_prepare_neon
-    adr             T0, Ljsimd_encode_mcu_AC_first_prepare_neon_consts
+    get_symbol_loc  T0, Ljsimd_encode_mcu_AC_first_prepare_neon_consts
     neg             w3, w3                        /* Al = -Al */
     eor             ZERO.16b, ZERO.16b, ZERO.16b
     ld1             {ANDMASK.16b}, [T0]
@@ -3875,13 +3884,8 @@ asm_function jsimd_encode_mcu_AC_first_prepare_neon
     LENEND          .req w9
     BITS            .req x5
 
-.balign 16
-Ljsimd_encode_mcu_AC_refine_prepare_neon_consts:
-    .byte 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, \
-          0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
-
 asm_function jsimd_encode_mcu_AC_refine_prepare_neon
-    adr             T0, Ljsimd_encode_mcu_AC_refine_prepare_neon_consts
+    get_symbol_loc  T0, Ljsimd_encode_mcu_AC_refine_prepare_neon_consts
     neg             w3, w3                        /* Al = -Al */
     movi            ONE.8h, #1
     eor             SIGN, SIGN, SIGN
