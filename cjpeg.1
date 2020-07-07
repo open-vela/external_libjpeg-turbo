@@ -1,4 +1,4 @@
-.TH CJPEG 1 "18 December 2019"
+.TH CJPEG 1 "18 March 2017"
 .SH NAME
 cjpeg \- compress an image file to a JPEG file
 .SH SYNOPSIS
@@ -16,7 +16,8 @@ cjpeg \- compress an image file to a JPEG file
 compresses the named image file, or the standard input if no file is
 named, and produces a JPEG/JFIF file on the standard output.
 The currently supported input file formats are: PPM (PBMPLUS color
-format), PGM (PBMPLUS grayscale format), BMP, and Targa.
+format), PGM (PBMPLUS grayscale format), BMP, Targa, and RLE (Utah Raster
+Toolkit format).  (RLE is supported only if the URT library is available.)
 .SH OPTIONS
 All switch names may be abbreviated; for example,
 .B \-grayscale
@@ -213,9 +214,6 @@ Send output image to the named file, not to standard output.
 Compress to memory instead of a file.  This feature was implemented mainly as a
 way of testing the in-memory destination manager (jpeg_mem_dest()), but it is
 also useful for benchmarking, since it reduces the I/O overhead.
-.TP
-.BI \-report
-Report compression progress.
 .TP
 .B \-verbose
 Enable debug printout.  More
