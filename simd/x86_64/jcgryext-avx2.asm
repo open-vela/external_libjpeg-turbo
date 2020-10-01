@@ -3,7 +3,6 @@
 ;
 ; Copyright (C) 2011, 2016, D. R. Commander.
 ; Copyright (C) 2015, Intel Corporation.
-; Copyright (C) 2018, Matthias Räncker.
 ;
 ; Based on the x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
@@ -58,7 +57,7 @@ EXTN(jsimd_rgb_gray_convert_avx2):
 
     mov         rsi, r12
     mov         ecx, r13d
-    mov         rdip, JSAMPARRAY [rsi+0*SIZEOF_JSAMPARRAY]
+    mov         rdi, JSAMPARRAY [rsi+0*SIZEOF_JSAMPARRAY]
     lea         rdi, [rdi+rcx*SIZEOF_JSAMPROW]
 
     pop         rcx
@@ -72,8 +71,8 @@ EXTN(jsimd_rgb_gray_convert_avx2):
     push        rsi
     push        rcx                     ; col
 
-    mov         rsip, JSAMPROW [rsi]    ; inptr
-    mov         rdip, JSAMPROW [rdi]    ; outptr0
+    mov         rsi, JSAMPROW [rsi]     ; inptr
+    mov         rdi, JSAMPROW [rdi]     ; outptr0
 
     cmp         rcx, byte SIZEOF_YMMWORD
     jae         near .columnloop

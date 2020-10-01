@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1994-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2017, 2019, D. R. Commander.
+ * Copyright (C) 2017, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -56,9 +56,9 @@ struct djpeg_dest_struct {
   void (*finish_output) (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo);
   /* Re-calculate buffer dimensions based on output dimensions (for use with
      partial image decompression.)  If this is NULL, then the output format
-     does not support partial image decompression (BMP, in particular, cannot
-     support partial decompression because it uses an inversion buffer to write
-     the image in bottom-up order.) */
+     does not support partial image decompression (BMP and RLE, in particular,
+     cannot support partial decompression because they use an inversion buffer
+     to write the image in bottom-up order.) */
   void (*calc_buffer_dimensions) (j_decompress_ptr cinfo,
                                   djpeg_dest_ptr dinfo);
 
@@ -87,9 +87,6 @@ struct cdjpeg_progress_mgr {
   struct jpeg_progress_mgr pub; /* fields known to JPEG library */
   int completed_extra_passes;   /* extra passes completed */
   int total_extra_passes;       /* total extra */
-  JDIMENSION max_scans;         /* abort if the number of scans exceeds this
-                                   value and the value is non-zero */
-  boolean report;               /* whether or not to report progress */
   /* last printed percentage stored here to avoid multiple printouts */
   int percent_done;
 };
@@ -107,6 +104,8 @@ EXTERN(cjpeg_source_ptr) jinit_read_gif(j_compress_ptr cinfo);
 EXTERN(djpeg_dest_ptr) jinit_write_gif(j_decompress_ptr cinfo);
 EXTERN(cjpeg_source_ptr) jinit_read_ppm(j_compress_ptr cinfo);
 EXTERN(djpeg_dest_ptr) jinit_write_ppm(j_decompress_ptr cinfo);
+EXTERN(cjpeg_source_ptr) jinit_read_rle(j_compress_ptr cinfo);
+EXTERN(djpeg_dest_ptr) jinit_write_rle(j_decompress_ptr cinfo);
 EXTERN(cjpeg_source_ptr) jinit_read_targa(j_compress_ptr cinfo);
 EXTERN(djpeg_dest_ptr) jinit_write_targa(j_decompress_ptr cinfo);
 
