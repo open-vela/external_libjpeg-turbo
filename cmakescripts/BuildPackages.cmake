@@ -114,13 +114,36 @@ endif() # WIN32
 
 
 ###############################################################################
+# Cygwin Package
+###############################################################################
+
+if(CYGWIN)
+
+configure_file(release/makecygwinpkg.in pkgscripts/makecygwinpkg)
+
+add_custom_target(cygwinpkg sh pkgscripts/makecygwinpkg)
+
+endif() # CYGWIN
+
+
+###############################################################################
 # Mac DMG
 ###############################################################################
 
 if(APPLE)
 
-set(IOS_ARMV8_BUILD "" CACHE PATH
-  "Directory containing ARMv8 iOS build to include in universal binaries")
+set(DEFAULT_OSX_32BIT_BUILD ${CMAKE_SOURCE_DIR}/osxx86)
+set(OSX_32BIT_BUILD ${DEFAULT_OSX_32BIT_BUILD} CACHE PATH
+  "Directory containing 32-bit (i386) Mac build to include in universal binaries (default: ${DEFAULT_OSX_32BIT_BUILD})")
+set(DEFAULT_IOS_ARMV7_BUILD ${CMAKE_SOURCE_DIR}/iosarmv7)
+set(IOS_ARMV7_BUILD ${DEFAULT_IOS_ARMV7_BUILD} CACHE PATH
+  "Directory containing ARMv7 iOS build to include in universal binaries (default: ${DEFAULT_IOS_ARMV7_BUILD})")
+set(DEFAULT_IOS_ARMV7S_BUILD ${CMAKE_SOURCE_DIR}/iosarmv7s)
+set(IOS_ARMV7S_BUILD ${DEFAULT_IOS_ARMV7S_BUILD} CACHE PATH
+  "Directory containing ARMv7s iOS build to include in universal binaries (default: ${DEFAULT_IOS_ARMV7S_BUILD})")
+set(DEFAULT_IOS_ARMV8_BUILD ${CMAKE_SOURCE_DIR}/iosarmv8)
+set(IOS_ARMV8_BUILD ${DEFAULT_IOS_ARMV8_BUILD} CACHE PATH
+  "Directory containing ARMv8 iOS build to include in universal binaries (default: ${DEFAULT_IOS_ARMV8_BUILD})")
 
 set(OSX_APP_CERT_NAME "" CACHE STRING
   "Name of the Developer ID Application certificate (in the macOS keychain) that should be used to sign the libjpeg-turbo DMG.  Leave this blank to generate an unsigned DMG.")
@@ -129,10 +152,12 @@ set(OSX_INST_CERT_NAME "" CACHE STRING
 
 configure_file(release/makemacpkg.in pkgscripts/makemacpkg)
 configure_file(release/Distribution.xml.in pkgscripts/Distribution.xml)
-configure_file(release/Welcome.rtf.in pkgscripts/Welcome.rtf)
 configure_file(release/uninstall.in pkgscripts/uninstall)
 
 add_custom_target(dmg sh pkgscripts/makemacpkg
+  SOURCES pkgscripts/makemacpkg)
+
+add_custom_target(udmg sh pkgscripts/makemacpkg universal
   SOURCES pkgscripts/makemacpkg)
 
 endif() # APPLE
