@@ -1,5 +1,5 @@
 /*
- * ARMv8 NEON optimizations for libjpeg-turbo
+ * Armv8 Neon optimizations for libjpeg-turbo
  *
  * Copyright (C) 2009-2011, Nokia Corporation and/or its subsidiary(-ies).
  *                          All Rights Reserved.
@@ -277,20 +277,6 @@ Ljsimd_huff_encode_one_block_neon_consts:
            255, 255, 255, 255,   8,   9,  22,  23  /* L5 => L6 : 2 lines OK */
     .byte    4,   5,   6,   7, 255, 255, 255, 255, \
            255, 255, 255, 255, 255, 255, 255, 255  /* L7 : 1 line OK */
-
-/* Constants for jsimd_encode_mcu_AC_first_prepare_neon() */
-
-.balign 16
-Ljsimd_encode_mcu_AC_first_prepare_neon_consts:
-    .byte 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, \
-          0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
-
-/* Constants for jsimd_encode_mcu_AC_refine_prepare_neon() */
-
-.balign 16
-Ljsimd_encode_mcu_AC_refine_prepare_neon_consts:
-    .byte 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, \
-          0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 
 .text
 
@@ -625,7 +611,7 @@ asm_function jsimd_idct_islow_neon
     shrn2           v5.8h, v15.4s, #16  /* wsptr[DCTSIZE*3] = (int)DESCALE(tmp13 + tmp0, CONST_BITS+PASS1_BITS+3) */
     shrn2           v6.8h, v17.4s, #16  /* wsptr[DCTSIZE*4] = (int)DESCALE(tmp13 - tmp0, CONST_BITS+PASS1_BITS+3) */
     movi            v0.16b, #(CENTERJSAMPLE)
-    /* Prepare pointers (dual-issue with NEON instructions) */
+    /* Prepare pointers (dual-issue with Neon instructions) */
       ldp             TMP1, TMP2, [OUTPUT_BUF], 16
     sqrshrn         v28.8b, v2.8h, #(CONST_BITS+PASS1_BITS+3-16)
       ldp             TMP3, TMP4, [OUTPUT_BUF], 16
@@ -1006,7 +992,7 @@ asm_function jsimd_idct_islow_neon
  * function from jidctfst.c
  *
  * Normally 1-D AAN DCT needs 5 multiplications and 29 additions.
- * But in ARM NEON case some extra additions are required because VQDMULH
+ * But in Arm Neon case some extra additions are required because VQDMULH
  * instruction can't handle the constants larger than 1. So the expressions
  * like "x * 1.082392200" have to be converted to "x * 0.082392200 + x",
  * which introduces an extra addition. Overall, there are 6 extra additions
@@ -1038,7 +1024,7 @@ asm_function jsimd_idct_ifast_neon
        instruction ensures that those bits are set to zero. */
     uxtw x3, w3
 
-    /* Load and dequantize coefficients into NEON registers
+    /* Load and dequantize coefficients into Neon registers
      * with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
@@ -1051,7 +1037,7 @@ asm_function jsimd_idct_ifast_neon
      *   6 | d28     | d29     ( v22.8h )
      *   7 | d30     | d31     ( v23.8h )
      */
-    /* Save NEON registers used in fast IDCT */
+    /* Save Neon registers used in fast IDCT */
     get_symbol_loc  TMP5, Ljsimd_idct_ifast_neon_consts
     ld1             {v16.8h, v17.8h}, [COEF_BLOCK], 32
     ld1             {v0.8h, v1.8h}, [DCT_TABLE], 32
@@ -1156,7 +1142,7 @@ asm_function jsimd_idct_ifast_neon
     add             v20.8h, v20.8h, v1.8h
     /* Descale to 8-bit and range limit */
     movi            v0.16b, #0x80
-      /* Prepare pointers (dual-issue with NEON instructions) */
+      /* Prepare pointers (dual-issue with Neon instructions) */
       ldp             TMP1, TMP2, [OUTPUT_BUF], 16
     sqshrn          v28.8b, v16.8h, #5
       ldp             TMP3, TMP4, [OUTPUT_BUF], 16
@@ -1235,7 +1221,7 @@ asm_function jsimd_idct_ifast_neon
  *
  * NOTE: jpeg-8 has an improved implementation of 4x4 inverse-DCT, which
  *       requires much less arithmetic operations and hence should be faster.
- *       The primary purpose of this particular NEON optimized function is
+ *       The primary purpose of this particular Neon optimized function is
  *       bit exact compatibility with jpeg-6b.
  *
  * TODO: a bit better instructions scheduling can be achieved by expanding
@@ -1305,7 +1291,7 @@ asm_function jsimd_idct_4x4_neon
        instruction ensures that those bits are set to zero. */
     uxtw x3, w3
 
-    /* Save all used NEON registers */
+    /* Save all used Neon registers */
     sub             sp, sp, 64
     mov             x9, sp
     /* Load constants (v3.4h is just used for padding) */
@@ -1314,7 +1300,7 @@ asm_function jsimd_idct_4x4_neon
     st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v0.4h, v1.4h, v2.4h, v3.4h}, [TMP4]
 
-    /* Load all COEF_BLOCK into NEON registers with the following allocation:
+    /* Load all COEF_BLOCK into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | v4.4h   | v5.4h
@@ -1448,7 +1434,7 @@ asm_function jsimd_idct_4x4_neon
  *
  * NOTE: jpeg-8 has an improved implementation of 2x2 inverse-DCT, which
  *       requires much less arithmetic operations and hence should be faster.
- *       The primary purpose of this particular NEON optimized function is
+ *       The primary purpose of this particular Neon optimized function is
  *       bit exact compatibility with jpeg-6b.
  */
 
@@ -1497,7 +1483,7 @@ asm_function jsimd_idct_2x2_neon
     st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v14.4h}, [TMP2]
 
-    /* Load all COEF_BLOCK into NEON registers with the following allocation:
+    /* Load all COEF_BLOCK into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | v4.4h   | v5.4h
@@ -1871,7 +1857,7 @@ asm_function jsimd_ycc_\colorid\()_convert_neon_slowst3
     /* Load constants to d1, d2, d3 (v0.4h is just used for padding) */
     get_symbol_loc  x15, Ljsimd_ycc_rgb_neon_consts
 
-    /* Save NEON registers */
+    /* Save Neon registers */
     st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x9], 32
     st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x9], 32
     ld1             {v0.4h, v1.4h}, [x15], 16
@@ -2156,7 +2142,7 @@ generate_jsimd_ycc_rgb_convert_neon extbgr,  24, 2, .4h,  1, .4h,  0, .4h,  .8b,
 .endm
 
 /* TODO: expand macros and interleave instructions if some in-order
- *       ARM64 processor actually can dual-issue LOAD/STORE with ALU */
+ *       AArch64 processor actually can dual-issue LOAD/STORE with ALU */
 .macro do_rgb_to_yuv_stage2_store_load_stage1 fast_ld3
     do_rgb_to_yuv_stage2
     do_load         \bpp, 8, \fast_ld3
@@ -2196,7 +2182,7 @@ asm_function jsimd_\colorid\()_ycc_convert_neon_slowld3
     ldr             OUTPUT_BUF2, [OUTPUT_BUF, #16]
     .unreq          OUTPUT_BUF
 
-    /* Save NEON registers */
+    /* Save Neon registers */
     sub             sp, sp, #64
     mov             x9, sp
     st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x9], 32
@@ -2410,13 +2396,13 @@ asm_function jsimd_fdct_islow_neon
     get_symbol_loc  TMP, Ljsimd_fdct_islow_neon_consts
     ld1             {v0.8h, v1.8h}, [TMP]
 
-    /* Save NEON registers */
+    /* Save Neon registers */
     sub             sp, sp, #64
     mov             x10, sp
     st1             {v8.8b, v9.8b, v10.8b, v11.8b}, [x10], 32
     st1             {v12.8b, v13.8b, v14.8b, v15.8b}, [x10], 32
 
-    /* Load all DATA into NEON registers with the following allocation:
+    /* Load all DATA into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | d16     | d17    | v16.8h
@@ -2643,7 +2629,7 @@ asm_function jsimd_fdct_islow_neon
     st1             {v16.8h, v17.8h, v18.8h, v19.8h}, [DATA], 64
     st1             {v20.8h, v21.8h, v22.8h, v23.8h}, [DATA]
 
-    /* Restore NEON registers */
+    /* Restore Neon registers */
     ld1             {v8.8b, v9.8b, v10.8b, v11.8b}, [sp], 32
     ld1             {v12.8b, v13.8b, v14.8b, v15.8b}, [sp], 32
 
@@ -2695,7 +2681,7 @@ asm_function jsimd_fdct_ifast_neon
     get_symbol_loc  TMP, Ljsimd_fdct_ifast_neon_consts
     ld1             {v0.4h}, [TMP]
 
-    /* Load all DATA into NEON registers with the following allocation:
+    /* Load all DATA into Neon registers with the following allocation:
      *       0 1 2 3 | 4 5 6 7
      *      ---------+--------
      *   0 | d16     | d17    | v0.8h
@@ -3080,7 +3066,7 @@ asm_function jsimd_huff_encode_one_block_neon_slowtbl
 .endif
     sub             sp, sp, 272
     sub             BUFFER, BUFFER, #0x1    /* BUFFER=buffer-- */
-    /* Save ARM registers */
+    /* Save Arm registers */
     stp             x19, x20, [sp]
     get_symbol_loc  x15, Ljsimd_huff_encode_one_block_neon_consts
     ldr             PUT_BUFFER, [x0, #0x10]
@@ -3447,625 +3433,3 @@ generate_jsimd_huff_encode_one_block 0
 .purgem put_bits
 .purgem checkbuf31
 .purgem checkbuf47
-
-
-/*****************************************************************************/
-
-/*
- * Macros to load data for jsimd_encode_mcu_AC_first_prepare_neon() and
- * jsimd_encode_mcu_AC_refine_prepare_neon()
- */
-
-.macro LOAD16
-    ldr             T0d, [LUT, #(0*4)]
-    ldr             T1d, [LUT, #(8*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[0], [T0]
-    ld1             {Y1.h}[0], [T1]
-
-    ldr             T0d, [LUT, #(1*4)]
-    ldr             T1d, [LUT, #(9*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[1], [T0]
-    ld1             {Y1.h}[1], [T1]
-
-    ldr             T0d, [LUT, #(2*4)]
-    ldr             T1d, [LUT, #(10*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[2], [T0]
-    ld1             {Y1.h}[2], [T1]
-
-    ldr             T0d, [LUT, #(3*4)]
-    ldr             T1d, [LUT, #(11*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[3], [T0]
-    ld1             {Y1.h}[3], [T1]
-
-    ldr             T0d, [LUT, #(4*4)]
-    ldr             T1d, [LUT, #(12*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[4], [T0]
-    ld1             {Y1.h}[4], [T1]
-
-    ldr             T0d, [LUT, #(5*4)]
-    ldr             T1d, [LUT, #(13*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[5], [T0]
-    ld1             {Y1.h}[5], [T1]
-
-    ldr             T0d, [LUT, #(6*4)]
-    ldr             T1d, [LUT, #(14*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[6], [T0]
-    ld1             {Y1.h}[6], [T1]
-
-    ldr             T0d, [LUT, #(7*4)]
-    ldr             T1d, [LUT, #(15*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[7], [T0]
-    ld1             {Y1.h}[7], [T1]
-
-    add             LUT, LUT, #(16*4)
-.endm
-
-.macro LOAD15
-    eor             Y1.16b, Y1.16b, Y1.16b
-
-    ldr             T0d, [LUT, #(0*4)]
-    ldr             T1d, [LUT, #(8*4)]
-    add             T0, BLOCK, T0, lsl #1
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[0], [T0]
-    ld1             {Y1.h}[0], [T1]
-
-    ldr             T0d, [LUT, #(1*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[1], [T0]
-
-    ldr             T0d, [LUT, #(2*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[2], [T0]
-
-    ldr             T0d, [LUT, #(3*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[3], [T0]
-
-    ldr             T0d, [LUT, #(4*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[4], [T0]
-
-    ldr             T0d, [LUT, #(5*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[5], [T0]
-
-    ldr             T0d, [LUT, #(6*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[6], [T0]
-
-    ldr             T0d, [LUT, #(7*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[7], [T0]
-
-    cmp             LENEND, #2
-    b.lt            1515f
-    ldr             T1d, [LUT, #(9*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y1.h}[1], [T1]
-
-    cmp             LENEND, #3
-    b.lt            1515f
-    ldr             T1d, [LUT, #(10*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y1.h}[2], [T1]
-
-    cmp             LENEND, #4
-    b.lt            1515f
-    ldr             T1d, [LUT, #(11*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y1.h}[3], [T1]
-
-    cmp             LENEND, #5
-    b.lt            1515f
-    ldr             T1d, [LUT, #(12*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y1.h}[4], [T1]
-
-    cmp             LENEND, #6
-    b.lt            1515f
-    ldr             T1d, [LUT, #(13*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y1.h}[5], [T1]
-
-    cmp             LENEND, #7
-    b.lt            1515f
-    ldr             T1d, [LUT, #(14*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y1.h}[6], [T1]
-
-1515:
-.endm
-
-.macro LOAD8
-    ldr             T0d, [LUT, #(0*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[0], [T0]
-
-    ldr             T0d, [LUT, #(1*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[1], [T0]
-
-    ldr             T0d, [LUT, #(2*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[2], [T0]
-
-    ldr             T0d, [LUT, #(3*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[3], [T0]
-
-    ldr             T0d, [LUT, #(4*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[4], [T0]
-
-    ldr             T0d, [LUT, #(5*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[5], [T0]
-
-    ldr             T0d, [LUT, #(6*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[6], [T0]
-
-    ldr             T0d, [LUT, #(7*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[7], [T0]
-.endm
-
-.macro LOAD7
-    eor             Y0.16b, Y0.16b, Y0.16b
-
-    ldr             T0d, [LUT, #(0*4)]
-    add             T0, BLOCK, T0, lsl #1
-    ld1             {Y0.h}[0], [T0]
-
-    cmp             LENEND, #2
-    b.lt            77f
-    ldr             T1d, [LUT, #(1*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[1], [T1]
-
-    cmp             LENEND, #3
-    b.lt            77f
-    ldr             T1d, [LUT, #(2*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[2], [T1]
-
-    cmp             LENEND, #4
-    b.lt            77f
-    ldr             T1d, [LUT, #(3*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[3], [T1]
-
-    cmp             LENEND, #5
-    b.lt            77f
-    ldr             T1d, [LUT, #(4*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[4], [T1]
-
-    cmp             LENEND, #6
-    b.lt            77f
-    ldr             T1d, [LUT, #(5*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[5], [T1]
-
-    cmp             LENEND, #7
-    b.lt            77f
-    ldr             T1d, [LUT, #(6*4)]
-    add             T1, BLOCK, T1, lsl #1
-    ld1             {Y0.h}[6], [T1]
-
-77:
-.endm
-
-.macro REDUCE0
-    ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [VALUES], #64
-    ld1             {v4.8h, v5.8h, v6.8h, v7.8h}, [VALUES], #64
-
-    cmeq            v0.8h, v0.8h, #0
-    cmeq            v1.8h, v1.8h, #0
-    cmeq            v2.8h, v2.8h, #0
-    cmeq            v3.8h, v3.8h, #0
-    cmeq            v4.8h, v4.8h, #0
-    cmeq            v5.8h, v5.8h, #0
-    cmeq            v6.8h, v6.8h, #0
-    cmeq            v7.8h, v7.8h, #0
-
-    xtn             v0.8b, v0.8h
-    xtn             v2.8b, v2.8h
-    xtn             v4.8b, v4.8h
-    xtn             v6.8b, v6.8h
-    xtn2            v0.16b, v1.8h
-    xtn2            v2.16b, v3.8h
-    xtn2            v4.16b, v5.8h
-    xtn2            v6.16b, v7.8h
-
-    and             v0.16b, v0.16b, ANDMASK.16b
-    and             v2.16b, v2.16b, ANDMASK.16b
-    and             v4.16b, v4.16b, ANDMASK.16b
-    and             v6.16b, v6.16b, ANDMASK.16b
-    addp            v0.16b, v0.16b, v2.16b
-    addp            v4.16b, v4.16b, v6.16b
-    addp            v0.16b, v0.16b, v4.16b
-    addp            v0.16b, v0.16b, v0.16b
-    umov            T0, v0.D[0]
-    mvn             T0, T0
-    str             T0, [BITS]
-.endm
-
-/*
- * Prepare data for jsimd_encode_mcu_AC_first().
- *
- * GLOBAL(int)
- * jsimd_encode_mcu_AC_first_prepare_neon(const JCOEF *block,
- *                                        const int *jpeg_natural_order_start,
- *                                        int Sl, int Al, JCOEF *values,
- *                                        size_t *zerobits)
- *
- * x0 = const JCOEF *block
- * x1 = const int *jpeg_natural_order_start
- * w2 = int Sl
- * w3 = int Al
- * x4 = JCOEF *values
- * x5 = size_t *zerobits
- *
- */
-
-    ZERO            .req v0
-    Y0              .req v2
-    Y1              .req v3
-    N0              .req v4
-    N1              .req v5
-    AL              .req v6
-    ANDMASK         .req v20
-    K               .req w12
-    LUT             .req x1
-    T0              .req x10
-    T0d             .req w10
-    T1              .req x11
-    T1d             .req w11
-    BLOCK           .req x0
-    VALUES          .req x4
-    XORVALUES       .req x14
-    LEN             .req w2
-    LENEND          .req w9
-    BITS            .req x5
-
-asm_function jsimd_encode_mcu_AC_first_prepare_neon
-    get_symbol_loc  T0, Ljsimd_encode_mcu_AC_first_prepare_neon_consts
-    neg             w3, w3                        /* Al = -Al */
-    eor             ZERO.16b, ZERO.16b, ZERO.16b
-    ld1             {ANDMASK.16b}, [T0]
-    dup             AL.8h, w3
-    add             XORVALUES, VALUES, #(/*DCTSIZE2*/ 64 * 2)
-    and             LENEND, LEN, 7
-    lsr             K, LEN, 4
-    cbz             K, 3f
-1:
-    LOAD16
-    cmlt            N0.8h, Y0.8h, #0
-    cmlt            N1.8h, Y1.8h, #0
-    abs             Y0.8h, Y0.8h
-    abs             Y1.8h, Y1.8h
-    ushl            Y0.8h, Y0.8h, AL.8h
-    ushl            Y1.8h, Y1.8h, AL.8h
-    eor             N0.16b, N0.16b, Y0.16b
-    eor             N1.16b, N1.16b, Y1.16b
-    st1             {Y0.8h, Y1.8h}, [VALUES], #32
-    st1             {N0.8h, N1.8h}, [XORVALUES], #32
-    subs            K, K, #1
-    b.ne            1b
-3:
-    tst             LEN, #8
-    b.eq            3f
-    tst             LEN, #7
-    b.eq            2f
-
-    LOAD15
-    cmlt            N0.8h, Y0.8h, #0
-    cmlt            N1.8h, Y1.8h, #0
-    abs             Y0.8h, Y0.8h
-    abs             Y1.8h, Y1.8h
-    ushl            Y0.8h, Y0.8h, AL.8h
-    ushl            Y1.8h, Y1.8h, AL.8h
-    eor             N0.16b, N0.16b, Y0.16b
-    eor             N1.16b, N1.16b, Y1.16b
-    st1             {Y0.8h, Y1.8h}, [VALUES], #32
-    st1             {N0.8h, N1.8h}, [XORVALUES], #32
-    b               4f
-2:
-    LOAD8
-    cmlt            N0.8h, Y0.8h, #0
-    abs             Y0.8h, Y0.8h
-    ushl            Y0.8h, Y0.8h, AL.8h
-    eor             N0.16b, N0.16b, Y0.16b
-    st1             {Y0.8h}, [VALUES], #16
-    st1             {N0.8h}, [XORVALUES], #16
-    b               4f
-3:
-    cbz             LENEND, 4f
-    LOAD7
-    cmlt            N0.8h, Y0.8h, #0
-    abs             Y0.8h, Y0.8h
-    ushl            Y0.8h, Y0.8h, AL.8h
-    eor             N0.16b, N0.16b, Y0.16b
-    st1             {Y0.8h}, [VALUES], #16
-    st1             {N0.8h}, [XORVALUES], #16
-    /* b               4f */
-    /* fallthrough */
-4:
-    add             K, LEN, #7
-    lsr             K, K, #3
-    subs            K, K, #(/*DCTSIZE2*/ 64 / 8)
-    b.eq            5f
-1:
-    st1             {ZERO.8h}, [VALUES], #16
-    st1             {ZERO.8h}, [XORVALUES], #16
-    adds            K, K, #1
-    b.ne            1b
-5:
-    sub             VALUES, VALUES, #(/*DCTSIZE2*/ 64 * 2)
-
-    REDUCE0
-
-    br              x30
-
-    .unreq          ZERO
-    .unreq          Y0
-    .unreq          Y1
-    .unreq          N0
-    .unreq          N1
-    .unreq          AL
-    .unreq          ANDMASK
-    .unreq          K
-    .unreq          LUT
-    .unreq          T0
-    .unreq          T0d
-    .unreq          T1
-    .unreq          T1d
-    .unreq          BLOCK
-    .unreq          VALUES
-    .unreq          XORVALUES
-    .unreq          LEN
-    .unreq          LENEND
-    .unreq          BITS
-
-/*
- * Prepare data for jsimd_encode_mcu_AC_refine.
- *
- * GLOBAL(int)
- * jsimd_encode_mcu_AC_refine_prepare_neon(const JCOEF *block,
- *                                         const int *jpeg_natural_order_start,
- *                                         int Sl, int Al, JCOEF *absvalues,
- *                                         size_t *bits)
- *
- * x0 = const JCOEF *block
- * x1 = const int *jpeg_natural_order_start
- * w2 = int Sl
- * w3 = int Al
- * x4 = JCOEF *absvalues
- * x5 = size_t *bits
- *
- */
-
-    ZERO            .req v0
-    ONE             .req v1
-    Y0              .req v2
-    Y1              .req v3
-    N0              .req v4
-    N1              .req v5
-    AL              .req v6
-    ANDMASK         .req v20
-    K               .req w12
-    KK              .req w13
-    EOB             .req w14
-    SIGN            .req x15
-    LUT             .req x1
-    T0              .req x10
-    T0d             .req w10
-    T1              .req x11
-    T1d             .req w11
-    BLOCK           .req x0
-    VALUES          .req x4
-    LEN             .req w2
-    LENEND          .req w9
-    BITS            .req x5
-
-asm_function jsimd_encode_mcu_AC_refine_prepare_neon
-    get_symbol_loc  T0, Ljsimd_encode_mcu_AC_refine_prepare_neon_consts
-    neg             w3, w3                        /* Al = -Al */
-    movi            ONE.8h, #1
-    eor             SIGN, SIGN, SIGN
-    eor             ZERO.16b, ZERO.16b, ZERO.16b
-    eor             EOB, EOB, EOB
-    ld1             {ANDMASK.16b}, [T0]
-    eor             KK, KK, KK
-    dup             AL.8h, w3
-    and             LENEND, LEN, 7
-    lsr             K, LEN, 4
-    cbz             K, 3f
-1:
-    LOAD16
-    cmlt            N0.8h, Y0.8h, #0
-    cmlt            N1.8h, Y1.8h, #0
-    abs             Y0.8h, Y0.8h
-    abs             Y1.8h, Y1.8h
-    ushl            Y0.8h, Y0.8h, AL.8h
-    ushl            Y1.8h, Y1.8h, AL.8h
-    st1             {Y0.8h, Y1.8h}, [VALUES], #32
-    xtn             N0.8b, N0.8h
-    xtn             N1.8b, N1.8h
-    cmeq            Y0.8h, Y0.8h, ONE.8h
-    cmeq            Y1.8h, Y1.8h, ONE.8h
-    xtn             Y0.8b, Y0.8h
-    xtn             Y1.8b, Y1.8h
-    and             N0.8b, N0.8b, ANDMASK.8b
-    and             N1.8b, N1.8b, ANDMASK.8b
-    and             Y0.8b, Y0.8b, ANDMASK.8b
-    and             Y1.8b, Y1.8b, ANDMASK.8b
-    addv            B28, N0.8b
-    addv            B29, N1.8b
-    addv            B30, Y0.8b
-    addv            B31, Y1.8b
-    ins             v28.b[1], v29.b[0]
-    ins             v30.b[1], v31.b[0]
-    umov            T0d, v28.h[0]    /* lsignbits.val16u[k>>4] = _mm_movemask_epi8(neg); */
-    umov            T1d, v30.h[0]    /* idx = _mm_movemask_epi8(x1); */
-    lsr             SIGN, SIGN, #16  /* make room for sizebits */
-    orr             SIGN, SIGN, T0, lsl #48
-    cbz             T1d, 2f
-    rbit            T1d, T1d
-    clz             T1d, T1d
-    add             EOB, KK, T1d     /* EOB = k + idx; */
-2:
-    add             KK, KK, #16
-    subs            K, K, #1
-    b.ne            1b
-3:
-    tst             LEN, #8
-    b.eq            3f
-    tst             LEN, #7
-    b.eq            2f
-
-    LOAD15
-    cmlt            N0.8h, Y0.8h, #0
-    cmlt            N1.8h, Y1.8h, #0
-    abs             Y0.8h, Y0.8h
-    abs             Y1.8h, Y1.8h
-    ushl            Y0.8h, Y0.8h, AL.8h
-    ushl            Y1.8h, Y1.8h, AL.8h
-    st1             {Y0.8h, Y1.8h}, [VALUES], #32
-    xtn             N0.8b, N0.8h
-    xtn             N1.8b, N1.8h
-    cmeq            Y0.8h, Y0.8h, ONE.8h
-    cmeq            Y1.8h, Y1.8h, ONE.8h
-    xtn             Y0.8b, Y0.8h
-    xtn             Y1.8b, Y1.8h
-    and             N0.8b, N0.8b, ANDMASK.8b
-    and             N1.8b, N1.8b, ANDMASK.8b
-    and             Y0.8b, Y0.8b, ANDMASK.8b
-    and             Y1.8b, Y1.8b, ANDMASK.8b
-    addv            B28, N0.8b
-    addv            B29, N1.8b
-    addv            B30, Y0.8b
-    addv            B31, Y1.8b
-    ins             v28.b[1], v29.b[0]
-    ins             v30.b[1], v31.b[0]
-    umov            T0d, v28.h[0]    /* lsignbits.val16u[k>>4] = _mm_movemask_epi8(neg); */
-    umov            T1d, v30.h[0]    /* idx = _mm_movemask_epi8(x1); */
-    lsr             SIGN, SIGN, #16  /* make room for sizebits */
-    orr             SIGN, SIGN, T0, lsl #48
-    cbz             T1d, 4f
-    rbit            T1d, T1d
-    clz             T1d, T1d
-    add             EOB, KK, T1d     /* EOB = k + idx; */
-    b               4f
-2:
-    LOAD8
-    cmlt            N0.8h, Y0.8h, #0
-    abs             Y0.8h, Y0.8h
-    ushl            Y0.8h, Y0.8h, AL.8h
-    st1             {Y0.8h}, [VALUES], #16
-    xtn             N0.8b, N0.8h
-    cmeq            Y0.8h, Y0.8h, ONE.8h
-    xtn             Y0.8b, Y0.8h
-    and             N0.8b, N0.8b, ANDMASK.8b
-    and             Y0.8b, Y0.8b, ANDMASK.8b
-    addv            B28, N0.8b
-    addv            B30, Y0.8b
-    umov            T0d, v28.b[0]    /* lsignbits.val16u[k>>4] = _mm_movemask_epi8(neg); */
-    umov            T1d, v30.b[0]    /* idx = _mm_movemask_epi8(x1); */
-    lsr             SIGN, SIGN, #8   /* make room for sizebits */
-    orr             SIGN, SIGN, T0, lsl #56
-    cbz             T1d, 4f
-    rbit            T1d, T1d
-    clz             T1d, T1d
-    add             EOB, KK, T1d     /* EOB = k + idx; */
-    b               4f
-3:
-    cbz             LENEND, 4f
-    LOAD7
-    cmlt            N0.8h, Y0.8h, #0
-    abs             Y0.8h, Y0.8h
-    ushl            Y0.8h, Y0.8h, AL.8h
-    st1             {Y0.8h}, [VALUES], #16
-    xtn             N0.8b, N0.8h
-    cmeq            Y0.8h, Y0.8h, ONE.8h
-    xtn             Y0.8b, Y0.8h
-    and             N0.8b, N0.8b, ANDMASK.8b
-    and             Y0.8b, Y0.8b, ANDMASK.8b
-    addv            B28, N0.8b
-    addv            B30, Y0.8b
-    umov            T0d, v28.b[0]    /* lsignbits.val16u[k>>4] = _mm_movemask_epi8(neg); */
-    umov            T1d, v30.b[0]    /* idx = _mm_movemask_epi8(x1); */
-    lsr             SIGN, SIGN, #8   /* make room for sizebits */
-    orr             SIGN, SIGN, T0, lsl #56
-    cbz             T1d, 4f
-    rbit            T1d, T1d
-    clz             T1d, T1d
-    add             EOB, KK, T1d     /* EOB = k + idx; */
-    /* b               4f */
-    /* fallthrough */
-4:
-    add             K, LEN, #7
-    lsr             K, K, #3
-    subs            K, K, #(/*DCTSIZE2*/ 64 / 8)
-    b.eq            5f
-1:
-    st1             {ZERO.8h}, [VALUES], #16
-    lsr             SIGN, SIGN, #8
-    adds            K, K, #1
-    b.ne            1b
-5:
-    mvn             SIGN, SIGN
-    sub             VALUES, VALUES, #(/*DCTSIZE2*/ 64 * 2)
-    str             SIGN, [BITS, #8]
-
-    REDUCE0
-
-    mov             w0, EOB
-    br              x30
-
-    .unreq          ZERO
-    .unreq          ONE
-    .unreq          Y0
-    .unreq          Y1
-    .unreq          N0
-    .unreq          N1
-    .unreq          AL
-    .unreq          ANDMASK
-    .unreq          K
-    .unreq          KK
-    .unreq          EOB
-    .unreq          SIGN
-    .unreq          LUT
-    .unreq          T0
-    .unreq          T0d
-    .unreq          T1
-    .unreq          T1d
-    .unreq          BLOCK
-    .unreq          VALUES
-    .unreq          LEN
-    .unreq          LENEND
-    .unreq          BITS
-
-.purgem LOAD16
-.purgem LOAD15
-.purgem LOAD8
-.purgem LOAD7
-.purgem REDUCE0
