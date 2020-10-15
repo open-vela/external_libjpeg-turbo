@@ -12,7 +12,7 @@
  *
  * This file contains the interface between the "normal" portions
  * of the library and the SIMD implementations when running on a
- * 64-bit ARM architecture.
+ * 64-bit Arm architecture.
  */
 
 #define JPEG_INTERNALS
@@ -22,7 +22,6 @@
 #include "../../jdct.h"
 #include "../../jsimddct.h"
 #include "../jsimd.h"
-#include "jconfigint.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -115,8 +114,8 @@ parse_proc_cpuinfo(int bufsize)
  */
 
 /*
- * ARMv8 architectures support NEON extensions by default.
- * It is no longer optional as it was with ARMv7.
+ * Armv8 architectures support Neon extensions by default.
+ * It is no longer optional as it was with Armv7.
  */
 
 
@@ -774,18 +773,6 @@ jsimd_huff_encode_one_block(void *state, JOCTET *buffer, JCOEFPTR block,
 GLOBAL(int)
 jsimd_can_encode_mcu_AC_first_prepare(void)
 {
-  init_simd();
-
-  if (DCTSIZE != 8)
-    return 0;
-  if (sizeof(JCOEF) != 2)
-    return 0;
-  if (SIZEOF_SIZE_T != 8)
-    return 0;
-
-  if (simd_support & JSIMD_NEON)
-    return 1;
-
   return 0;
 }
 
@@ -794,25 +781,11 @@ jsimd_encode_mcu_AC_first_prepare(const JCOEF *block,
                                   const int *jpeg_natural_order_start, int Sl,
                                   int Al, JCOEF *values, size_t *zerobits)
 {
-  jsimd_encode_mcu_AC_first_prepare_neon(block, jpeg_natural_order_start,
-                                         Sl, Al, values, zerobits);
 }
 
 GLOBAL(int)
 jsimd_can_encode_mcu_AC_refine_prepare(void)
 {
-  init_simd();
-
-  if (DCTSIZE != 8)
-    return 0;
-  if (sizeof(JCOEF) != 2)
-    return 0;
-  if (SIZEOF_SIZE_T != 8)
-    return 0;
-
-  if (simd_support & JSIMD_NEON)
-    return 1;
-
   return 0;
 }
 
@@ -821,7 +794,5 @@ jsimd_encode_mcu_AC_refine_prepare(const JCOEF *block,
                                    const int *jpeg_natural_order_start, int Sl,
                                    int Al, JCOEF *absvalues, size_t *bits)
 {
-  return jsimd_encode_mcu_AC_refine_prepare_neon(block,
-                                                 jpeg_natural_order_start,
-                                                 Sl, Al, absvalues, bits);
+  return 0;
 }
