@@ -5,7 +5,7 @@ if(CMAKE_EXECUTABLE_SUFFIX)
 endif()
 
 project(libjpeg-turbo C)
-set(VERSION 2.0.6)
+set(VERSION 2.0.80)
 string(REPLACE "." ";" VERSION_TRIPLET ${VERSION})
 list(GET VERSION_TRIPLET 0 VERSION_MAJOR)
 list(GET VERSION_TRIPLET 1 VERSION_MINOR)
@@ -46,7 +46,7 @@ if(CMAKE_SYSTEM_PROCESSOR_LC MATCHES "x86_64" OR
   CMAKE_SYSTEM_PROCESSOR_LC MATCHES "i[0-9]86" OR
   CMAKE_SYSTEM_PROCESSOR_LC MATCHES "x86" OR
   CMAKE_SYSTEM_PROCESSOR_LC MATCHES "ia32")
-  if(BITS EQUAL 64)
+  if(BITS EQUAL 64 OR CMAKE_C_COMPILER_ABI MATCHES "ELF X32")
     set(CPU_TYPE x86_64)
   else()
     set(CPU_TYPE i386)
@@ -84,7 +84,9 @@ if(WIN32)
     set(CMAKE_INSTALL_DEFAULT_PREFIX "${CMAKE_INSTALL_DEFAULT_PREFIX}64")
   endif()
 else()
-  set(CMAKE_INSTALL_DEFAULT_PREFIX /opt/${CMAKE_PROJECT_NAME})
+  if(NOT CMAKE_INSTALL_DEFAULT_PREFIX)
+    set(CMAKE_INSTALL_DEFAULT_PREFIX /opt/${CMAKE_PROJECT_NAME})
+  endif()
 endif()
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_DEFAULT_PREFIX}" CACHE PATH
@@ -103,6 +105,8 @@ if(CMAKE_INSTALL_PREFIX STREQUAL "${CMAKE_INSTALL_DEFAULT_PREFIX}")
   if(UNIX AND NOT APPLE)
     if(BITS EQUAL 64)
       set(CMAKE_INSTALL_DEFAULT_LIBDIR "lib64")
+    elseif(CMAKE_C_COMPILER_ABI MATCHES "ELF X32")
+      set(CMAKE_INSTALL_DEFAULT_LIBDIR "libx32")
     else()
       set(CMAKE_INSTALL_DEFAULT_LIBDIR "lib32")
     endif()
@@ -153,8 +157,12 @@ option(WITH_ARITH_DEC "Include arithmetic decoding support when emulating the li
 boolean_number(WITH_ARITH_DEC)
 option(WITH_ARITH_ENC "Include arithmetic encoding support when emulating the libjpeg v6b API/ABI" TRUE)
 boolean_number(WITH_ARITH_ENC)
-option(WITH_JAVA "Build Java wrapper for the TurboJPEG API library (implies ENABLE_SHARED=1)" FALSE)
-boolean_number(WITH_JAVA)
+if(CMAKE_C_COMPILER_ABI MATCHES "ELF X32")
+  set(WITH_JAVA 0)
+else()
+  option(WITH_JAVA "Build Java wrapper for the TurboJPEG API library (implies ENABLE_SHARED=1)" FALSE)
+  boolean_number(WITH_JAVA)
+endif()
 option(WITH_JPEG7 "Emulate libjpeg v7 API/ABI (this makes ${CMAKE_PROJECT_NAME} backward-incompatible with libjpeg v6b)" FALSE)
 boolean_number(WITH_JPEG7)
 option(WITH_JPEG8 "Emulate libjpeg v8 API/ABI (this makes ${CMAKE_PROJECT_NAME} backward-incompatible with libjpeg v6b)" FALSE)
@@ -415,13 +423,6 @@ if(UNIX)
       int main (void) {
         exit(is_shifting_signed(-0x7F7E80B1L));
       }" RIGHT_SHIFT_IS_UNSIGNED)
-  endif()
-
-  if(CMAKE_CROSSCOMPILING)
-    set(__CHAR_UNSIGNED__ 0)
-  else()
-    check_c_source_runs("int main(void) { return ((char) -1 < 0); }"
-      __CHAR_UNSIGNED__)
   endif()
 endif()
 
@@ -1373,9 +1374,12 @@ set(EXE ${CMAKE_EXECUTABLE_SUFFIX})
 
 if(WITH_TURBOJPEG)
   if(ENABLE_SHARED)
-    install(TARGETS turbojpeg tjbench
+    install(TARGETS turbojpeg EXPORT ${CMAKE_PROJECT_NAME}Targets
+      INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(TARGETS tjbench
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     if(NOT CMAKE_VERSION VERSION_LESS "3.1" AND MSVC AND
       CMAKE_C_LINKER_SUPPORTS_PDB)
@@ -1384,8 +1388,9 @@ if(WITH_TURBOJPEG)
     endif()
   endif()
   if(ENABLE_STATIC)
-    install(TARGETS turbojpeg-static ARCHIVE
-      DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(TARGETS turbojpeg-static EXPORT ${CMAKE_PROJECT_NAME}Targets
+      INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
     if(NOT ENABLE_SHARED)
       if(MSVC_IDE OR XCODE)
         set(DIR "${CMAKE_CURRENT_BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}")
@@ -1401,7 +1406,9 @@ if(WITH_TURBOJPEG)
 endif()
 
 if(ENABLE_STATIC)
-  install(TARGETS jpeg-static ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  install(TARGETS jpeg-static EXPORT ${CMAKE_PROJECT_NAME}Targets
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
   if(NOT ENABLE_SHARED)
     if(MSVC_IDE OR XCODE)
       set(DIR "${CMAKE_CURRENT_BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}")
@@ -1441,6 +1448,13 @@ endif()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pkgscripts/libjpeg.pc
   ${CMAKE_CURRENT_BINARY_DIR}/pkgscripts/libturbojpeg.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/pkgscripts/${CMAKE_PROJECT_NAME}Config.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/pkgscripts/${CMAKE_PROJECT_NAME}ConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
+install(EXPORT ${CMAKE_PROJECT_NAME}Targets
+  NAMESPACE ${CMAKE_PROJECT_NAME}::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME})
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jconfig.h
   ${CMAKE_CURRENT_SOURCE_DIR}/jerror.h ${CMAKE_CURRENT_SOURCE_DIR}/jmorecfg.h
