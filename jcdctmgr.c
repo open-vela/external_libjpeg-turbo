@@ -381,19 +381,19 @@ convsamp(JSAMPARRAY sample_data, JDIMENSION start_col, DCTELEM *workspace)
     elemptr = sample_data[elemr] + start_col;
 
 #if DCTSIZE == 8                /* unroll the inner loop */
-    *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
-    *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
-    *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
-    *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
-    *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
-    *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
-    *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
-    *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
+    *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
+    *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
+    *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
+    *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
+    *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
+    *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
+    *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
+    *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
 #else
     {
       register int elemc;
       for (elemc = DCTSIZE; elemc > 0; elemc--)
-        *workspaceptr++ = (*elemptr++) - CENTERJSAMPLE;
+        *workspaceptr++ = GETJSAMPLE(*elemptr++) - CENTERJSAMPLE;
     }
 #endif
   }
@@ -533,19 +533,20 @@ convsamp_float(JSAMPARRAY sample_data, JDIMENSION start_col,
   for (elemr = 0; elemr < DCTSIZE; elemr++) {
     elemptr = sample_data[elemr] + start_col;
 #if DCTSIZE == 8                /* unroll the inner loop */
-    *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
-    *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
-    *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
-    *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
-    *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
-    *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
-    *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
-    *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
+    *workspaceptr++ = (FAST_FLOAT)(GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
+    *workspaceptr++ = (FAST_FLOAT)(GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
+    *workspaceptr++ = (FAST_FLOAT)(GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
+    *workspaceptr++ = (FAST_FLOAT)(GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
+    *workspaceptr++ = (FAST_FLOAT)(GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
+    *workspaceptr++ = (FAST_FLOAT)(GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
+    *workspaceptr++ = (FAST_FLOAT)(GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
+    *workspaceptr++ = (FAST_FLOAT)(GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
 #else
     {
       register int elemc;
       for (elemc = DCTSIZE; elemc > 0; elemc--)
-        *workspaceptr++ = (FAST_FLOAT)((*elemptr++) - CENTERJSAMPLE);
+        *workspaceptr++ = (FAST_FLOAT)
+                          (GETJSAMPLE(*elemptr++) - CENTERJSAMPLE);
     }
 #endif
   }
