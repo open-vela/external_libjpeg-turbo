@@ -33,19 +33,14 @@ matrix:
         CMAKE_FLAGS="-DWITH_12BIT=1"
         CTEST_OUTPUT_ON_FAILURE=1
     - os: linux
-      dist: bionic
-      compiler: gcc
-      env:
-        BUILD_X32=1
-        CMAKE_FLAGS="-DWITH_JPEG7=1 -DCMAKE_C_FLAGS=-mx32"
-        CTEST_OUTPUT_ON_FAILURE=1
-      addons:
-        apt:
-          packages:
-            - nasm
-    - os: linux
       compiler: gcc
       arch: ppc64le
+      env:
+        CMAKE_FLAGS="-DWITH_JPEG7=1"
+        CTEST_OUTPUT_ON_FAILURE=1
+    - os: linux
+      compiler: gcc
+      arch: arm64
       env:
         CMAKE_FLAGS="-DWITH_JPEG8=1"
         CTEST_OUTPUT_ON_FAILURE=1
@@ -57,27 +52,24 @@ matrix:
         CMAKE_FLAGS="-DWITH_SIMD=0"
         CTEST_OUTPUT_ON_FAILURE=1
     - os: linux
-      compiler: gcc
-      arch: arm64
-      env:
-        CTEST_OUTPUT_ON_FAILURE=1
-    - os: linux
       compiler: clang
       arch: arm64
       env:
         CTEST_OUTPUT_ON_FAILURE=1
 
 before_install:
-  - if [ "$BUILD_X32" = "1" ]; then
-      sudo apt -y --install-recommends install libc6-dev-x32;
-    fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
       pushd $HOME/Downloads &&
+      curl -LO https://updates.cdn-apple.com/2019/cert/041-88384-20191011-3d8da658-dca4-4a5b-b67c-26e686876403/JavaForOSX.dmg &&
+      hdid JavaForOSX.dmg &&
+      sudo installer -pkg /Volumes/Java\ for\ macOS\ 2017-001/JavaForOSX.pkg -target / &&
+      hdiutil detach /Volumes/Java\ for\ macOS\ 2017-001 &&
       curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci &&
       . ./macports-ci install &&
-      sudo /opt/local/bin/port -N install yasm md5sha1sum &&
+      sudo /opt/local/bin/port -N install gcc5 yasm md5sha1sum &&
       popd &&
-      ln -fs /Applications/Xcode.app /Applications/Xcode83.app;
+      git clone --depth=1 https://github.com/libjpeg-turbo/gas-preprocessor.git ~/src/gas-preprocessor &&
+      ln -fs /Applications/Xcode.app /Applications/Xcode72.app;
     fi
   - if [ "${BUILD_OFFICIAL:-}" != "" ]; then
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
@@ -100,11 +92,11 @@ script:
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         mkdir $HOME/rpmkeys &&
         wget --no-check-certificate "http://www.libjpeg-turbo.org/key/LJTPR-GPG-KEY" -O $HOME/rpmkeys/LJTPR-GPG-KEY &&
-        docker run -v $HOME/src/ljt.nightly:/root/src/ljt.nightly -v $HOME/src/buildscripts:/root/src/buildscripts -v $TRAVIS_BUILD_DIR:/root/src/libjpeg-turbo -v $HOME/.gnupg:/root/.gnupg -v $HOME/rpmkeys:/rpmkeys -t dcommander/buildljt:$TRAVIS_BRANCH bash -c "rpm --import /rpmkeys/LJTPR-GPG-KEY && ~/src/buildscripts/buildljt -d /root/src/libjpeg-turbo -v" &&
+        docker run -v $HOME/src/ljt.nightly:/root/src/ljt.nightly -v $HOME/src/buildscripts:/root/src/buildscripts -v $TRAVIS_BUILD_DIR:/root/src/libjpeg-turbo -v $HOME/.gnupg:/root/.gnupg -v $HOME/rpmkeys:/rpmkeys -t dcommander/buildljt:latest bash -c "rpm --import /rpmkeys/LJTPR-GPG-KEY && ~/src/buildscripts/buildljt -d /root/src/libjpeg-turbo -v" &&
         sudo chown -R travis:travis ~/src/ljt.nightly &&
         mv ~/src/ljt.nightly/latest/log-$TRAVIS_OS_NAME.txt ~/src/ljt.nightly/latest/files/;
       else
-        ~/src/buildscripts/buildljt -d $TRAVIS_BUILD_DIR -v &&
+        PATH=$PATH:~/src/gas-preprocessor ~/src/buildscripts/buildljt -d $TRAVIS_BUILD_DIR -v &&
         mv ~/src/ljt.nightly/latest/log-$TRAVIS_OS_NAME.txt ~/src/ljt.nightly/latest/files/;
       fi
     fi
@@ -119,7 +111,7 @@ script:
             ! "${CMAKE_FLAGS[0]}" =~ "WITH_SIMD" &&
             "$TRAVIS_CPU_ARCH" = "amd64" ]]; then
         JSIMD_FORCESSE2=1 make test &&
-        cmake -DFLOATTEST=32bit .. &&
+        cmake -DFLOATTEST=no-fp-contract .. &&
         JSIMD_FORCENONE=1 make test;
       fi &&
       popd;
