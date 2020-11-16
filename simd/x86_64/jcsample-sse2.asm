@@ -3,7 +3,6 @@
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ; Copyright (C) 2009, 2016, D. R. Commander.
-; Copyright (C) 2018, Matthias Räncker.
 ;
 ; Based on the x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
@@ -71,7 +70,7 @@ EXTN(jsimd_h2v1_downsample_sse2):
     push        rax
     push        rcx
 
-    mov         rdip, JSAMPROW [rsi]
+    mov         rdi, JSAMPROW [rsi]
     add         rdi, rdx
     mov         al, JSAMPLE [rdi-1]
 
@@ -106,8 +105,8 @@ EXTN(jsimd_h2v1_downsample_sse2):
     push        rdi
     push        rsi
 
-    mov         rsip, JSAMPROW [rsi]    ; inptr
-    mov         rdip, JSAMPROW [rdi]    ; outptr
+    mov         rsi, JSAMPROW [rsi]     ; inptr
+    mov         rdi, JSAMPROW [rdi]     ; outptr
 
     cmp         rcx, byte SIZEOF_XMMWORD
     jae         short .columnloop
@@ -216,7 +215,7 @@ EXTN(jsimd_h2v2_downsample_sse2):
     push        rax
     push        rcx
 
-    mov         rdip, JSAMPROW [rsi]
+    mov         rdi, JSAMPROW [rsi]
     add         rdi, rdx
     mov         al, JSAMPLE [rdi-1]
 
@@ -251,9 +250,9 @@ EXTN(jsimd_h2v2_downsample_sse2):
     push        rdi
     push        rsi
 
-    mov         rdxp, JSAMPROW [rsi+0*SIZEOF_JSAMPROW]  ; inptr0
-    mov         rsip, JSAMPROW [rsi+1*SIZEOF_JSAMPROW]  ; inptr1
-    mov         rdip, JSAMPROW [rdi]                    ; outptr
+    mov         rdx, JSAMPROW [rsi+0*SIZEOF_JSAMPROW]  ; inptr0
+    mov         rsi, JSAMPROW [rsi+1*SIZEOF_JSAMPROW]  ; inptr1
+    mov         rdi, JSAMPROW [rdi]                    ; outptr
 
     cmp         rcx, byte SIZEOF_XMMWORD
     jae         short .columnloop
