@@ -4,10 +4,10 @@
 #define JPEG_LIB_VERSION  62
 
 /* libjpeg-turbo version */
-#define LIBJPEG_TURBO_VERSION  2.1.3
+#define LIBJPEG_TURBO_VERSION  2.1.4
 
 /* libjpeg-turbo version in integer form */
-#define LIBJPEG_TURBO_VERSION_NUMBER  2001003
+#define LIBJPEG_TURBO_VERSION_NUMBER  2001004
 
 /* Support arithmetic encoding */
 #define C_ARITH_CODING_SUPPORTED 1
@@ -20,7 +20,6 @@
 
 /* Use accelerated SIMD routines. */
 /* #undef WITH_SIMD */
-
 
 /*
  * Define BITS_IN_JSAMPLE as either
