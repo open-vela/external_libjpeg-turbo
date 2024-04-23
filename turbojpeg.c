@@ -30,12 +30,16 @@
 /* TurboJPEG/LJT:  this implements the TurboJPEG API using libjpeg or
    libjpeg-turbo */
 
+/* Put setjmp.h at the top of the include to bypass the
+ * EXTERN macro definition conflict problem in nuttx's setjmp.h.
+ */
+#include <setjmp.h>
+
 #include <ctype.h>
 #include <jinclude.h>
 #define JPEG_INTERNALS
 #include <jpeglib.h>
 #include <jerror.h>
-#include <setjmp.h>
 #include <errno.h>
 #include "./turbojpeg.h"
 #include "./tjutil.h"
